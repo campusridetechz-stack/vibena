@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101827">
+  <title>VIBENA — Live Audio & Creator Wallet</title>
+  <meta name="description" content="VIBENA is an audio-first live streaming platform with voice rooms, virtual gifts and creator rewards.">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{--bg:#0d1523;--panel:#151f30;--panel2:#1b2940;--gold:#e8bd65;--gold2:#f4d995;--text:#f5f6f8;--muted:#a9b4c5;--line:#2b3a50;--green:#7ed6ae;--danger:#ff8e8e}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.5}
+    button,input{font:inherit}button{cursor:pointer}.app{max-width:1050px;margin:auto;padding:0 16px 90px}
+    header{display:flex;align-items:center;justify-content:space-between;padding:18px 0;border-bottom:1px solid var(--line);gap:12px}
+    .brand{font-size:23px;font-weight:900;letter-spacing:2px;color:var(--gold)}.brand small{display:block;font-size:9px;letter-spacing:2.1px;color:var(--muted);font-weight:600}
+    .header-actions{display:flex;gap:8px;align-items:center}.btn{border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:var(--panel2);color:var(--text);font-weight:700}
+    .btn.gold{background:var(--gold);color:#17202e;border-color:var(--gold)}.btn.ghost{background:transparent}.btn:disabled{opacity:.5;cursor:not-allowed}
+    .hero{padding:36px 0 26px;display:grid;grid-template-columns:1.35fr .65fr;gap:22px;align-items:center}
+    .eyebrow{color:var(--gold);font-size:11px;letter-spacing:2px;font-weight:800}.hero h1{font-size:clamp(32px,6vw,55px);line-height:1.05;margin:10px 0 14px;max-width:650px}
+    .hero p{color:var(--muted);max-width:590px;margin:0 0 20px}.hero-card,.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px}
+    .hero-card{text-align:center;padding:25px}.orb{width:90px;height:90px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;background:linear-gradient(145deg,#f1d38f,#bd8739);color:#17202e;font-size:34px;font-weight:900;box-shadow:0 0 40px #e8bd6530}
+    .hero-card strong{display:block}.hero-card span{color:var(--muted);font-size:13px}
+    .notice{border:1px solid #69552f;background:#2b261b;color:#f1d99f;border-radius:12px;padding:12px 14px;font-size:12px;margin:12px 0 22px}
+    .section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:28px 0 13px}.section-head h2{margin:0;font-size:21px}.section-head p{margin:3px 0 0;color:var(--muted);font-size:13px}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.room{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+    .room-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.live{font-size:10px;color:var(--green);font-weight:800;letter-spacing:1px}.room h3{margin:0 0 5px;font-size:16px}.room p{margin:0;color:var(--muted);font-size:12px}
+    .room-meta{display:flex;justify-content:space-between;margin-top:15px;color:var(--muted);font-size:11px}.pill{background:#26354b;border-radius:30px;padding:5px 9px;font-size:10px;color:#d8e0eb}
+    .feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.feature{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:16px}.feature b{display:block;margin-bottom:5px}.feature p{font-size:12px;color:var(--muted);margin:0}
+    .page{display:none}.page.active{display:block}.page-intro{padding:24px 0 10px}.page-intro h1{margin:0 0 6px}.page-intro p{margin:0;color:var(--muted)}
+    .empty{padding:24px;text-align:center;color:var(--muted);background:var(--panel);border:1px dashed var(--line);border-radius:15px}
+    .profile-box{display:flex;align-items:center;gap:14px}.avatar{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:#31445f;color:var(--gold2);font-size:23px;font-weight:800}
+    .muted{color:var(--muted)}.small{font-size:12px}.balance{font-size:28px;color:var(--gold);font-weight:900}
+
+    .security-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
+    .security-item{background:#101a29;border:1px solid var(--line);border-radius:13px;padding:13px}
+    .security-item b{display:block;font-size:13px;margin-bottom:4px}
+    .security-item p{margin:0;color:var(--muted);font-size:11px}
+    .status-tag{display:inline-block;border-radius:20px;padding:4px 8px;font-size:10px;font-weight:800;background:#3a3020;color:#f1d99f;margin-top:7px}
+    .security-warning{border:1px solid #7a4a4a;background:#2b1d23;color:#ffd0d0;border-radius:12px;padding:12px;font-size:12px;margin:12px 0}
+    @media(max-width:520px){.security-grid{grid-template-columns:1fr}}
+
+    nav{position:fixed;bottom:0;left:0;right:0;background:#111c2bF2;backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;justify-content:center;z-index:5}
+    .nav-inner{width:min(1050px,100%);display:grid;grid-template-columns:repeat(5,1fr);padding:8px 8px max(8px,env(safe-area-inset-bottom))}
+    .nav-btn{border:0;background:transparent;color:var(--muted);padding:7px 3px;font-size:11px;font-weight:700}.nav-btn span{display:block;font-size:18px;margin-bottom:2px}.nav-btn.active{color:var(--gold)}
+    .modal-backdrop{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;padding:16px;z-index:10}.modal-backdrop.show{display:flex}
+    .modal{width:min(440px,100%);background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:21px;max-height:90vh;overflow:auto}
+    .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.modal h2{margin:0;font-size:21px}.close{border:0;background:transparent;color:var(--muted);font-size:25px}
+    label{display:block;font-size:12px;color:var(--muted);margin:13px 0 6px}input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:#0d1726;color:var(--text);outline:none}input:focus{border-color:var(--gold)}
+    .form-actions{display:grid;gap:9px;margin-top:17px}.form-message{font-size:12px;margin-top:12px;min-height:18px;color:var(--gold2)}.switch-auth{text-align:center;color:var(--muted);font-size:12px;margin-top:14px}.switch-auth button{border:0;background:none;color:var(--gold);font-weight:800}
+    footer{text-align:center;color:#7f8ba0;font-size:11px;padding:28px 0 12px}
+    @media(max-width:700px){.hero{grid-template-columns:1fr;padding-top:28px}.hero-card{display:none}.grid,.feature-grid{grid-template-columns:1fr}.header-actions .btn{padding:8px 10px;font-size:12px}.section-head{align-items:start;flex-direction:column}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">VIBENA<small>LIVE AUDIO · GIFTS · REWARDS</small></div>
+    <div class="header-actions">
+      <button class="btn ghost" id="loginTop" onclick="openAuth('login')">Log in</button>
+      <button class="btn gold" id="signupTop" onclick="openAuth('signup')">Join VIBENA</button>
+      <button class="btn ghost" id="accountTop" style="display:none" onclick="showPage('profile')">My account</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="page active" id="homePage">
+      <div class="hero">
+        <div>
+          <div class="eyebrow">LIVE AUDIO STREAMING</div>
+          <h1>Go live.<br>Share your voice. Earn.</h1>
+          <p>Host audio rooms, welcome listeners and receive virtual gifts. No video streaming. Just live voice, gifts and creator rewards.</p>
+          <button class="btn gold" onclick="openAuth('signup')">Create your profile</button>
+          <button class="btn" onclick="showPage('rooms')">Explore rooms</button>
+        </div>
+        <div class="hero-card"><div class="orb">V</div><strong>Listen. Speak. Connect.</strong><span>A space built around your voice.</span></div>
+      </div>
+      <div class="notice"><b>Development preview:</b> Account registration and login are connected. Live audio, gifts, coin purchases and cash withdrawals are not active. Wallet figures shown here are demonstrations only. Security controls beyond the current authentication setup still require backend configuration and testing.</div>
+      <div class="section-head"><div><h2>Live audio rooms</h2><p>Room previews while the live audio system is being built.</p></div><button class="btn" onclick="showPage('rooms')">See rooms</button></div>
+      <div class="grid">
+        <article class="room"><div class="room-top"><span class="live">● ROOM PREVIEW</span><span class="pill">Community</span></div><h3>Open Conversations</h3><p>Share ideas, ask questions and meet new people.</p><div class="room-meta"><span>🎙 20 seats planned</span><span>Preview</span></div></article>
+        <article class="room"><div class="room-top"><span class="live">● ROOM PREVIEW</span><span class="pill">Learning</span></div><h3>Learn Together</h3><p>Discuss skills, education and useful resources.</p><div class="room-meta"><span>🎙 20 seats planned</span><span>Preview</span></div></article>
+        <article class="room"><div class="room-top"><span class="live">● ROOM PREVIEW</span><span class="pill">Ideas</span></div><h3>Ideas & Opportunities</h3><p>Talk about projects, work and community ideas.</p><div class="room-meta"><span>🎙 20 seats planned</span><span>Preview</span></div></article>
+      </div>
+      <div class="section-head"><div><h2>Built around live audio</h2><p>A focused platform for hosts, listeners and gifts.</p></div></div>
+      <div class="feature-grid">
+        <div class="feature"><b>🎧 Voice-first rooms</b><p>Listen or request a speaking position. Video is not part of the plan.</p></div>
+        <div class="feature"><b>🎁 Virtual gifts</b><p>Listeners will be able to send gifts to support hosts.</p></div>
+        <div class="feature"><b>💰 Creator rewards</b><p>Eligible gift earnings and approved streaming rewards will be tracked separately.</p></div>
+      </div>
+    </section>
+
+    <section class="page" id="roomsPage"><div class="page-intro"><h1>Voice rooms</h1><p>Discover conversations and communities.</p></div><div class="notice">Rooms are currently previews. Live audio, speaker seats and room moderation are not connected yet.</div><div class="grid">
+      <article class="room"><div class="room-top"><span class="live">● PREVIEW</span><span class="pill">Community</span></div><h3>Open Conversations</h3><p>Meet people and exchange ideas.</p><div class="room-meta"><span>20 planned positions</span><button class="btn" onclick="comingSoon()">Coming soon</button></div></article>
+      <article class="room"><div class="room-top"><span class="live">● PREVIEW</span><span class="pill">Learning</span></div><h3>Learn Together</h3><p>Share useful knowledge and skills.</p><div class="room-meta"><span>20 planned positions</span><button class="btn" onclick="comingSoon()">Coming soon</button></div></article>
+      <article class="room"><div class="room-top"><span class="live">● PREVIEW</span><span class="pill">Ideas</span></div><h3>Ideas & Opportunities</h3><p>Discuss work, projects and opportunities.</p><div class="room-meta"><span>20 planned positions</span><button class="btn" onclick="comingSoon()">Coming soon</button></div></article>
+    </div></section>
+
+    <section class="page" id="chatPage"><div class="page-intro"><h1>Room chat</h1><p>Live room messages for hosts and listeners.</p></div><div class="empty">Live room chat is not connected yet. The first release is focused on audio rooms.</div></section>
+
+    <section class="page" id="walletPage">
+      <div class="page-intro"><h1>Creator wallet</h1><p>Track coins, creator earnings and withdrawals separately.</p></div>
+      <div class="notice"><b>Wallet prototype:</b> These are display examples only. No money or points are stored, earned, transferred or withdrawable yet. Real balances must come from a secure server-side ledger.</div>
+      <div class="grid">
+        <div class="card"><div class="muted small">VIBENA Coins</div><div class="balance">0 VBC</div><p class="muted small">Purchased coins for sending gifts. Not cash.</p></div>
+        <div class="card"><div class="muted small">Creator Earnings</div><div class="balance">0 pts</div><p class="muted small">Points from eligible gifts and approved rewards.</p></div>
+        <div class="card"><div class="muted small">Available to withdraw</div><div class="balance">$0.00</div><p class="muted small">Only verified, approved earnings can become withdrawable.</p></div>
+      </div>
+      <div class="section-head"><div><h2>Proposed withdrawal rules</h2><p>Initial settings for the VIBENA model.</p></div></div>
+      <div class="card">
+        <div class="feature-grid">
+          <div class="feature"><b>30,000 points</b><p>Proposed minimum balance for a $3 withdrawal.</p></div>
+          <div class="feature"><b>10,000 points = $1</b><p>Proposed conversion rate, subject to financial validation.</p></div>
+          <div class="feature"><b>5% fee</b><p>Proposed VIBENA withdrawal fee, subject to actual payout costs.</p></div>
+        </div>
+        <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:16px">
+          <h3 style="margin:0 0 8px">Withdrawal fee calculator</h3>
+          <label for="withdrawAmount">Amount to withdraw (USD)</label>
+          <input id="withdrawAmount" type="number" min="3" step="0.01" value="3" inputmode="decimal">
+          <div class="feature-grid" style="margin-top:12px">
+            <div class="feature"><span class="muted small">Withdrawal fee (5%)</span><b id="feeAmount">$0.15</b></div>
+            <div class="feature"><span class="muted small">You receive</span><b id="netAmount">$2.85</b></div>
+            <div class="feature"><span class="muted small">Points required</span><b id="pointsAmount">30,000 pts</b></div>
+          </div>
+          <p class="muted small" id="calcMessage" aria-live="polite">Minimum withdrawal is $3 before the fee. The fee is deducted from the withdrawal amount.</p>
+          <button class="btn gold" style="width:100%;margin-top:10px" disabled>Withdrawals not active yet</button>
+        </div>
+      </div>
+      <div class="section-head"><div><h2>How creator earnings will work</h2><p>Separate balances help protect users and VIBENA.</p></div></div>
+      <div class="card">
+        <p><b>Gifts from listeners:</b> eligible gifts can generate creator earnings based on a published reward rate.</p>
+        <p><b>Self-gifting:</b> may earn a separate, lower reward rate, with daily limits and anti-fraud checks. The rate is not final.</p>
+        <p><b>Streaming rewards:</b> any two-hour host reward will be a separate, funded programme—not an automatic promise.</p>
+        <p class="muted small">Purchased VIBENA Coins will never automatically convert into withdrawable cash. Refunded, fraudulent or reversed transactions will not qualify.</p>
+      </div>
+    </section>
+
+
+    <section class="page" id="profilePage">
+      <div class="page-intro"><h1>Your profile</h1><p>Manage your VIBENA account and security.</p></div>
+      <div class="card" id="profileContent"><div class="empty">Log in or create an account to view your profile.</div><div style="margin-top:14px;text-align:center"><button class="btn gold" onclick="openAuth('signup')">Create account</button></div></div>
+      <div class="section-head"><div><h2>Security Centre</h2><p>How VIBENA plans to protect accounts, coins and withdrawals.</p></div></div>
+      <div class="card">
+        <div class="security-warning"><b>Development status:</b> These are security requirements being built. They are not all active yet. Do not deposit money or treat prototype wallet figures as real funds.</div>
+        <div class="security-grid">
+          <div class="security-item"><b>🔐 Account protection</b><p>Email confirmation, strong password rules, secure recovery and optional multi-factor authentication.</p><span class="status-tag">Further setup required</span></div>
+          <div class="security-item"><b>🛡️ Private account access</b><p>Database Row Level Security so each member can access only permitted personal records.</p><span class="status-tag">Policies must be configured and tested</span></div>
+          <div class="security-item"><b>💳 Verified payments</b><p>Payment confirmation must be checked by a trusted backend with the payment provider. Browser success messages are not proof.</p><span class="status-tag">Not connected</span></div>
+          <div class="security-item"><b>🧾 Protected wallet ledger</b><p>Every coin credit, gift, reward, fee, reversal and withdrawal must be recorded in an append-only transaction history.</p><span class="status-tag">Not connected</span></div>
+          <div class="security-item"><b>🚦 Fraud monitoring</b><p>Flag unusual self-gifting, linked accounts, rapid transactions, suspicious devices and repeated failed attempts for review.</p><span class="status-tag">Not connected</span></div>
+          <div class="security-item"><b>💸 Withdrawal checks</b><p>Verify identity, payout-account ownership, available balance and risk signals before approving a payout.</p><span class="status-tag">Not connected</span></div>
+          <div class="security-item"><b>👮 Admin protection</b><p>Separate admin roles, multi-factor authentication, least-privilege access and audit logs for every privileged action.</p><span class="status-tag">Not connected</span></div>
+          <div class="security-item"><b>🚨 Reports and moderation</b><p>Members can report suspicious accounts, hosts, agencies and vendors. Serious reports enter a review queue.</p><span class="status-tag">Not connected</span></div>
+        </div>
+        <p class="muted small" style="margin:14px 0 0">Security rule: no user-facing page or browser script will be allowed to directly edit coin balances or creator earnings. Balance changes must be authorised by trusted server-side functions.</p>
+      </div>
+    </section>
+
+  </main>
+  <footer>VIBENA · Your voice. Your space. <br>Preview build — features will be released as they are tested.</footer>
+</div>
+
+<nav><div class="nav-inner">
+  <button class="nav-btn active" data-page="home" onclick="showPage('home')"><span>⌂</span>Home</button>
+  <button class="nav-btn" data-page="rooms" onclick="showPage('rooms')"><span>◉</span>Rooms</button>
+  <button class="nav-btn" data-page="chat" onclick="showPage('chat')"><span>☷</span>Chat</button>
+  <button class="nav-btn" data-page="wallet" onclick="showPage('wallet')"><span>◇</span>Wallet</button>
+  <button class="nav-btn" data-page="profile" onclick="showPage('profile')"><span>○</span>Profile</button>
+</div></nav>
+
+<div class="modal-backdrop" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+  <div class="modal">
+    <div class="modal-head"><h2 id="authTitle">Join VIBENA</h2><button class="close" aria-label="Close" onclick="closeAuth()">×</button></div>
+    <p class="muted small" id="authDescription">Create an account using your email address.</p>
+    <form id="authForm">
+      <div id="nameField"><label for="displayName">Display name</label><input id="displayName" type="text" maxlength="30" placeholder="Choose a name people will see" autocomplete="nickname"></div>
+      <label for="email">Email address</label><input id="email" type="email" required autocomplete="email" placeholder="you@example.com">
+      <label for="password">Password</label><input id="password" type="password" required minlength="6" autocomplete="new-password" placeholder="At least 6 characters">
+      <div class="form-actions"><button class="btn gold" id="submitAuth" type="submit">Create account</button></div>
+      <div class="form-message" id="formMessage" role="status"></div>
+    </form>
+    <div class="switch-auth" id="authSwitch">Already have an account? <button onclick="setAuthMode('login')">Log in</button></div>
+  </div>
+</div>
+
+<script>
+  // Public browser credentials only. Never put a Supabase secret key in this file.
+  const SUPABASE_URL = 'https://aqsyfqldysuqwsorxjml.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_8JxpZSwSPqa9RQFrSEzIug_jtaIKW8e';
+  let supabaseClient = null;
+  let authMode = 'signup';
+
+  try {
+    if (window.supabase && window.supabase.createClient) {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+      });
+    }
+  } catch (error) {
+    console.error('Supabase setup error:', error);
+  }
+
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+    const page = document.getElementById(name + 'Page');
+    if (page) page.classList.add('active');
+    document.querySelectorAll('.nav-btn').forEach(el => el.classList.toggle('active', el.dataset.page === name));
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+  function comingSoon(){ alert('This feature is not active yet. We are building and testing it carefully.'); }
+  function openAuth(mode){ setAuthMode(mode || 'signup'); document.getElementById('authModal').classList.add('show'); }
+  function closeAuth(){ document.getElementById('authModal').classList.remove('show'); }
+  function setAuthMode(mode) {
+    authMode = mode;
+    const signup = mode === 'signup';
+    document.getElementById('authTitle').textContent = signup ? 'Join VIBENA' : 'Welcome back';
+    document.getElementById('authDescription').textContent = signup ? 'Create an account using your email address.' : 'Log in to your VIBENA account.';
+    document.getElementById('nameField').style.display = signup ? 'block' : 'none';
+    document.getElementById('displayName').required = signup;
+    document.getElementById('submitAuth').textContent = signup ? 'Create account' : 'Log in';
+    document.getElementById('authSwitch').innerHTML = signup
+      ? 'Already have an account? <button type="button" onclick="setAuthMode(\\'login\\')">Log in</button>'
+      : 'New to VIBENA? <button type="button" onclick="setAuthMode(\\'signup\\')">Create an account</button>';
+    document.getElementById('formMessage').textContent = '';
+    document.getElementById('password').autocomplete = signup ? 'new-password' : 'current-password';
+  }
+  // Front-end calculator only. It does not create or modify wallet balances.
+  function updateWithdrawalEstimate(){
+    const input=document.getElementById('withdrawAmount');
+    if(!input) return;
+    const amount=Number(input.value);
+    const feeEl=document.getElementById('feeAmount');
+    const netEl=document.getElementById('netAmount');
+    const pointsEl=document.getElementById('pointsAmount');
+    const message=document.getElementById('calcMessage');
+    if(!Number.isFinite(amount)||amount<3){
+      feeEl.textContent='$0.00'; netEl.textContent='$0.00'; pointsEl.textContent='—';
+      message.textContent='Enter at least $3.00. The minimum is before the withdrawal fee.'; return;
+    }
+    const fee=amount*0.05;
+    feeEl.textContent='$'+fee.toFixed(2);
+    netEl.textContent='$'+(amount-fee).toFixed(2);
+    pointsEl.textContent=Math.round(amount*10000).toLocaleString('en-US')+' pts';
+    message.textContent='Estimate only: final fees may change after payout-provider costs and country rules are confirmed.';
+  }
+  document.getElementById('withdrawAmount')?.addEventListener('input',updateWithdrawalEstimate);
+  updateWithdrawalEstimate();
+
+  document.getElementById('authForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const message = document.getElementById('formMessage');
+    const button = document.getElementById('submitAuth');
+    if (!supabaseClient) { message.textContent = 'Connection could not start. Please refresh and try again.'; return; }
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const displayName = document.getElementById('displayName').value.trim();
+    button.disabled = true;
+    button.textContent = authMode === 'signup' ? 'Creating account…' : 'Logging in…';
+    message.textContent = '';
+    try {
+      if (authMode === 'signup') {
+        const { data, error } = await supabaseClient.auth.signUp({
+          email, password,
+          options: { data: { display_name: displayName || 'VIBENA member' } }
+        });
+        if (error) throw error;
+        if (data.session) {
+          message.textContent = 'Your account is ready. Welcome to VIBENA!';
+        } else {
+          message.textContent = 'Account request received. Please check your email and confirm your address, then return here to log in.';
+        }
+      } else {
+        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        message.textContent = 'You are logged in. Welcome back!';
+      }
+    } catch (error) {
+      message.textContent = error.message || 'Something went wrong. Please try again.';
+    } finally {
+      button.disabled = false;
+      button.textContent = authMode === 'signup' ? 'Create account' : 'Log in';
+    }
+  });
+
+  function renderUser(user) {
+    const loginTop = document.getElementById('loginTop');
+    const signupTop = document.getElementById('signupTop');
+    const accountTop = document.getElementById('accountTop');
+    const content = document.getElementById('profileContent');
+    if (user) {
+      loginTop.style.display = 'none'; signupTop.style.display = 'none'; accountTop.style.display = 'inline-block';
+      const name = (user.user_metadata && user.user_metadata.display_name) || user.email.split('@')[0];
+      const initial = name.trim().charAt(0).toUpperCase() || 'V';
+      content.innerHTML = `<div class="profile-box"><div class="avatar">${escapeHtml(initial)}</div><div><b>${escapeHtml(name)}</b><div class="muted small">${escapeHtml(user.email)}</div><div class="muted small">VIBENA member</div></div></div><hr style="border:0;border-top:1px solid var(--line);margin:18px 0"><p class="muted small">Your account is connected. You can update your display name in a later profile upgrade.</p><button class="btn" id="logoutButton">Log out</button>`;
+      document.getElementById('logoutButton').addEventListener('click', async () => {
+        const { error } = await supabaseClient.auth.signOut();
+        if (error) alert(error.message);
+        else { renderUser(null); showPage('home'); }
+      });
+    } else {
+      loginTop.style.display = 'inline-block'; signupTop.style.display = 'inline-block'; accountTop.style.display = 'none';
+      content.innerHTML = '<div class="empty">Log in or create an account to view your profile.</div><div style="margin-top:14px;text-align:center"><button class="btn gold" onclick="openAuth(\\'signup\\')">Create account</button> <button class="btn" onclick="openAuth(\\'login\\')">Log in</button></div>';
+    }
+  }
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
+  if (supabaseClient) {
+    supabaseClient.auth.getSession().then(({data}) => renderUser(data.session ? data.session.user : null));
+    supabaseClient.auth.onAuthStateChange((_event, session) => {
+      renderUser(session ? session.user : null);
+    });
+  } else {
+    document.getElementById('formMessage').textContent = 'Supabase library did not load. Check your internet connection and refresh.';
+  }
+  document.getElementById('authModal').addEventListener('click', e => { if (e.target.id === 'authModal') closeAuth(); });
+</script>
+</body>
+</html>
